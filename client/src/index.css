@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+:root {
+  /* Primary colors (main brand color) */
+  --color-primary: #09637e;
+  --color-primary-hover: #088395;
+
+  /* Secondary colors (supporting UI elements) */
+  --color-secondary: #7ab2b2;
+  --color-secondary-hover: #088395;
+
+  /* Background and text */
+  --color-background: #ebf4f6;
+  --color-text: #09637e;
+
+  /* Accent color (highlight, buttons, links, focus) */
+  --color-accent: #088395;
+}

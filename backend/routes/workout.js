@@ -31,8 +31,8 @@ router.get('/plan', protect, async (req, res) => {
       }
     }
     
-    const plan = generateWorkoutPlan(profile.goal, adjustedExperience, profile.activityLevel);
-    res.json({ plan, adjustedExperience });
+    const plan = generateWorkoutPlan(profile.goal, adjustedExperience, profile.activityLevel, profile.workoutType || 'gym');
+    res.json({ plan, adjustedExperience, workoutType: profile.workoutType || 'gym' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

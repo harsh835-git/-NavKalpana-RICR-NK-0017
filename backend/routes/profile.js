@@ -23,7 +23,7 @@ router.get('/', protect, async (req, res) => {
 // Setup / Update profile
 router.post('/setup', protect, async (req, res) => {
   try {
-    const { age, sex, height, currentWeight, goalWeight, activityLevel, experienceLevel, goal } = req.body;
+    const { age, sex, height, currentWeight, goalWeight, activityLevel, experienceLevel, goal, workoutType, dietPreference } = req.body;
     
     const bmi = calculateBMI(currentWeight, height);
     const maintenanceCalories = calculateMaintenanceCalories(currentWeight, height, age, sex, activityLevel);
@@ -35,6 +35,8 @@ router.post('/setup', protect, async (req, res) => {
         profile: {
           age, sex, height, currentWeight, goalWeight,
           activityLevel, experienceLevel, goal,
+          workoutType: workoutType || 'gym',
+          dietPreference: dietPreference || 'non_vegetarian',
           bmi, maintenanceCalories, targetCalories,
           profileComplete: true
         }

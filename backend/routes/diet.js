@@ -9,7 +9,7 @@ router.get('/plan', protect, async (req, res) => {
     if (!profile || !profile.profileComplete) {
       return res.status(400).json({ message: 'Please complete your profile first' });
     }
-    const plan = generateDietPlan(profile.targetCalories, profile.goal, profile.sex);
+    const plan = generateDietPlan(profile.targetCalories, profile.goal, profile.sex, profile.dietPreference || 'non_vegetarian');
     res.json(plan);
   } catch (err) {
     res.status(500).json({ message: err.message });

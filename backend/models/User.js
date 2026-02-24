@@ -17,6 +17,8 @@ const userSchema = new mongoose.Schema({
     activityLevel: { type: String, enum: ['sedentary', 'light', 'moderate', 'active', 'very_active'] },
     experienceLevel: { type: String, enum: ['beginner', 'intermediate', 'advanced'] },
     goal: { type: String, enum: ['weight_loss', 'muscle_gain', 'recomposition', 'maintain', 'endurance'] },
+    workoutType: { type: String, enum: ['home', 'gym'], default: 'gym' },
+    dietPreference: { type: String, enum: ['vegetarian', 'eggetarian', 'non_vegetarian'], default: 'non_vegetarian' },
     bmi: Number,
     maintenanceCalories: Number,
     targetCalories: Number,

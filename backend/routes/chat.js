@@ -36,13 +36,28 @@ router.post('/message', protect, async (req, res) => {
       c.energyLevel === 'slightly_fatigued' || c.energyLevel === 'very_tired'
     ).length;
     
-    const systemPrompt = `You are FitAI Coach, a fitness and nutrition coach. Be concise (under 150 words), actionable, and reference user data.
-User: ${user.name}, Goal: ${profile?.goal || 'n/a'}, Weight: ${weightLogs[0]?.weight || profile?.currentWeight || 'n/a'}kg -> ${profile?.goalWeight || 'n/a'}kg, Calories: ${profile?.targetCalories || 'n/a'} kcal/day, Workout adherence: ${Math.round(workoutAdherence)}%, Diet adherence: ${Math.round(dietAdherence)}%, Weekly weight change: ${avgWeeklyChange.toFixed(2)}kg, Fatigue flags: ${fatigueFlags}/7, Activity: ${profile?.activityLevel || 'n/a'}, Experience: ${profile?.experienceLevel || 'n/a'}.
-Give 1-2 actionable steps. Add a safety note only if relevant.`;
+    const systemPrompt = `You are FitAI Coach, a personal fitness and nutrition coach. Always format your response using Markdown:
+- Use **bold** for key terms, numbers, and important advice
+- Use bullet points or numbered lists for steps and recommendations
+- Use headings (##) only when the response covers multiple distinct topics
+- Keep responses focused and actionable — 100 to 200 words max
+- Add a safety note only if medically relevant
+
+User profile:
+- **Name:** ${user.name}
+- **Goal:** ${profile?.goal || 'n/a'}
+- **Current weight:** ${weightLogs[0]?.weight || profile?.currentWeight || 'n/a'} kg → **Target:** ${profile?.goalWeight || 'n/a'} kg
+- **Daily calories:** ${profile?.targetCalories || 'n/a'} kcal
+- **Workout adherence:** ${Math.round(workoutAdherence)}%
+- **Diet adherence:** ${Math.round(dietAdherence)}%
+- **Weekly weight change:** ${avgWeeklyChange.toFixed(2)} kg
+- **Fatigue flags (last 7 days):** ${fatigueFlags}/7
+- **Activity level:** ${profile?.activityLevel || 'n/a'}
+- **Experience:** ${profile?.experienceLevel || 'n/a'}`;
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-lite',
-      generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
+      model: 'gemini-2.5-flash',
+      generationConfig: { maxOutputTokens: 10000, temperature: 0.7 }
     });
     const result = await model.generateContent(systemPrompt + '\n\nQuestion: ' + message);
     const response = result.response.text();

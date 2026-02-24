@@ -1,0 +1,71 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import { useToast } from '../hooks/useToast';
+
+const Register = () => {
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { showToast, ToastComponent } = useToast();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (form.password.length < 8) return showToast('Password must be at least 8 characters', 'error');
+    setLoading(true);
+    try {
+      const res = await axios.post('/api/auth/register', form);
+      showToast('OTP sent to your email!');
+      setTimeout(() => navigate('/verify-otp', { state: { userId: res.data.userId, email: form.email } }), 1000);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Registration failed', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: 24 }}>
+      {ToastComponent}
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, var(--accent), var(--accent2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: '#000' }}>F</div>
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 26 }} className="gradient-text">FitAI</span>
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Create account</h1>
+          <p style={{ color: 'var(--text2)', fontSize: 15 }}>Start your adaptive fitness journey</p>
+        </div>
+
+        <div className="card" style={{ borderRadius: 20 }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div>
+              <label className="label">Full Name</label>
+              <input className="input-field" type="text" placeholder="Alex Johnson" value={form.name}
+                onChange={e => setForm({...form, name: e.target.value})} required />
+            </div>
+            <div>
+              <label className="label">Email</label>
+              <input className="input-field" type="email" placeholder="alex@example.com" value={form.email}
+                onChange={e => setForm({...form, email: e.target.value})} required />
+            </div>
+            <div>
+              <label className="label">Password</label>
+              <input className="input-field" type="password" placeholder="Min. 8 characters" value={form.password}
+                onChange={e => setForm({...form, password: e.target.value})} required />
+            </div>
+            <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 4 }} disabled={loading}>
+              {loading ? <><div className="spinner" /> Sending OTP...</> : 'Create Account →'}
+            </button>
+          </form>
+        </div>
+
+        <p style={{ textAlign: 'center', color: 'var(--text2)', marginTop: 20, fontSize: 14 }}>
+          Already have an account? <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 600 }}>Sign in</Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Register;

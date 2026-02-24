@@ -36,4 +36,19 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fitai')
   .catch(err => console.error('MongoDB error:', err));
 
 const PORT = process.env.PORT || 5050;
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found'
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Server Error'
+  });
+});
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

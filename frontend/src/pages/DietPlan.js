@@ -1,23 +1,72 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { DashboardLayout } from '../components/Sidebar';
+import { DashboardLayout, MedicalDisclaimer } from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js';
+import { Info, Zap, Salad, ArrowDownCircle } from '../components/Icons';
 
 ChartJS.register(ArcElement, Tooltip);
+
+const getDietAdjustmentSummary = (stats, profile) => {
+  if (!stats) return null;
+  const dietAdh = stats.dietAdherence ?? 100;
+  const workoutAdh = stats.workoutAdherence ?? 100;
+  const dropOff = stats.dropOffRisk;
+
+  if (!dropOff && dietAdh >= 60) return null;
+
+  const reasons = [];
+  const changes = [];
+
+  if (dietAdh < 40) {
+    reasons.push(`Diet adherence is at ${dietAdh}% — significantly below target.`);
+    changes.push('Consider simplifying meals to reduce friction and improve adherence.');
+  } else if (dietAdh < 60) {
+    reasons.push(`Diet adherence is at ${dietAdh}% — below the 60% threshold.`);
+    changes.push('Meal variety has been kept consistent to help you get back on track.');
+  }
+
+  if (workoutAdh < 50) {
+    reasons.push(`Workout completion is at ${workoutAdh}% — activity levels are lower than expected.`);
+    changes.push('Calorie surplus/deficit adjustments may be less impactful until activity normalises.');
+  }
+
+  if (stats.consecutiveMissed >= 3) {
+    reasons.push('3 or more consecutive workouts were missed recently.');
+  }
+
+  if (reasons.length === 0) return null;
+
+  return {
+    dietAdherence: dietAdh,
+    workoutAdherence: workoutAdh,
+    reasons,
+    changes,
+    action: dietAdh < 50
+      ? 'Start with one meal at a time. Even partial adherence builds momentum.'
+      : 'Focus on consistency over perfection — following the plan 70% of the time is better than 0%.'
+  };
+};
 
 const DietPlan = () => {
   const { user } = useAuth();
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [progressStats, setProgressStats] = useState(null);
 
   const goal = user?.profile?.goal;
 
   useEffect(() => {
     setLoading(true);
-    axios.get('/api/diet/plan')
-      .then(res => setPlan(res.data))
+    Promise.all([
+      axios.get('/api/diet/plan'),
+      axios.get('/api/progress/stats').catch(() => ({ data: null }))
+    ])
+      .then(([dietRes, statsRes]) => {
+        setPlan(dietRes.data);
+        setProgressStats(statsRes.data?.stats || null);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [goal]);
@@ -36,7 +85,7 @@ const DietPlan = () => {
 
   return (
     <DashboardLayout>
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 4 }}>Diet Plan</h1>
         <p style={{ color: 'var(--text2)' }}>
           Personalized nutrition based on your goal and calorie target
@@ -55,6 +104,111 @@ const DietPlan = () => {
           )}
         </p>
       </div>
+
+      <MedicalDisclaimer style={{ marginBottom: 24 }} />
+
+      {/* Diet Adjustment Summary */}
+      {(() => {
+        const summary = getDietAdjustmentSummary(progressStats, user?.profile);
+        if (!summary) return null;
+        return (
+          <div style={{
+            borderRadius: 16,
+            border: '1px solid rgba(255,152,0,0.3)',
+            background: 'linear-gradient(135deg, rgba(255,152,0,0.06) 0%, rgba(255,107,157,0.04) 100%)',
+            marginBottom: 24,
+            overflow: 'hidden'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid rgba(255,152,0,0.2)',
+              display: 'flex', alignItems: 'center', gap: 12
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: 'rgba(255,152,0,0.12)',
+                border: '1px solid rgba(255,152,0,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#ff9800'
+              }}>
+                <ArrowDownCircle size={18} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#ff9800', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>
+                  Diet Plan Adjustment Summary
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text3)' }}>
+                  Based on your recent consistency — plan kept simple to rebuild momentum
+                </div>
+              </div>
+              {/* Adherence badge */}
+              <div style={{
+                padding: '4px 12px', borderRadius: 20, flexShrink: 0,
+                background: summary.dietAdherence < 50 ? 'rgba(239,68,68,0.12)' : 'rgba(255,152,0,0.12)',
+                border: `1px solid ${summary.dietAdherence < 50 ? 'rgba(239,68,68,0.3)' : 'rgba(255,152,0,0.3)'}`,
+                color: summary.dietAdherence < 50 ? 'var(--danger)' : '#ff9800',
+                fontSize: 12, fontWeight: 700
+              }}>
+                {summary.dietAdherence}% diet adh.
+              </div>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Reasons */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                  background: 'var(--bg3)', border: '1px solid var(--border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text3)', marginTop: 1
+                }}><Info size={13} /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Why</div>
+                  {summary.reasons.map((r, i) => (
+                    <div key={i} style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5, marginBottom: i < summary.reasons.length - 1 ? 4 : 0 }}>
+                      {r}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Changes */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                  background: 'var(--bg3)', border: '1px solid var(--border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text3)', marginTop: 1
+                }}><Salad size={13} /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>What changed</div>
+                  {summary.changes.map((c, i) => (
+                    <div key={i} style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5, marginBottom: i < summary.changes.length - 1 ? 4 : 0 }}>
+                      {c}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                  background: 'var(--bg3)', border: '1px solid var(--border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text3)', marginTop: 1
+                }}><Zap size={13} /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>What to do</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>{summary.action}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {plan && (
         <>

@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
 const Progress = require('../models/Progress');
+const User = require('../models/User');
+const { calculateBMI, calculateMaintenanceCalories, calculateTargetCalories } = require('../utils/fitness');
+const { runWeeklyEvaluation } = require('../utils/evaluation');
 
 // Log progress
 router.post('/log', protect, async (req, res) => {
@@ -15,6 +18,23 @@ router.post('/log', protect, async (req, res) => {
       notes
     });
     await progress.save();
+
+    // Recalculate BMI and calorie targets whenever a new weight is recorded
+    if (weight && req.user.profile) {
+      const { height, age, sex, activityLevel, goal } = req.user.profile;
+      if (height && age && sex && activityLevel) {
+        const bmi = calculateBMI(weight, height);
+        const maintenanceCalories = calculateMaintenanceCalories(weight, height, age, sex, activityLevel);
+        const targetCalories = calculateTargetCalories(maintenanceCalories, goal, sex);
+        await User.findByIdAndUpdate(req.user._id, {
+          'profile.currentWeight': weight,
+          'profile.bmi': bmi,
+          'profile.maintenanceCalories': maintenanceCalories,
+          'profile.targetCalories': targetCalories
+        });
+      }
+    }
+
     res.status(201).json(progress);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -65,24 +85,62 @@ router.get('/stats', protect, async (req, res) => {
     
     // Weight trend
     const weightLogs = logs.filter(l => l.weight).map(l => ({ date: l.date, weight: l.weight }));
-    
+
+    // Physiologically realistic weekly change bounds (kg/week)
+    // Based on: weight loss 0.25–1.0 kg/wk, muscle gain 0.1–0.5 kg/wk
+    const REALISTIC_BOUNDS = {
+      weight_loss:    { min: -1.0, max: -0.25, recommended: -0.5 },
+      muscle_gain:    { min:  0.1, max:  0.5,  recommended:  0.25 },
+      recomposition:  { min: -0.3, max:  0.3,  recommended: -0.2 },
+      maintain:       { min: -0.15, max: 0.15, recommended: -0.1 },
+      endurance:      { min: -0.5, max:  0.5,  recommended: -0.25 }
+    };
+
     // Goal forecast
     let forecast = null;
-    if (weightLogs.length >= 2) {
+    if (weightLogs.length >= 2 && req.user.profile?.goalWeight) {
       const firstWeight = weightLogs[0].weight;
       const lastWeight = weightLogs[weightLogs.length - 1].weight;
-      const weeksElapsed = (new Date(weightLogs[weightLogs.length-1].date) - new Date(weightLogs[0].date)) / (7 * 24 * 60 * 60 * 1000);
-      const avgWeeklyChange = weeksElapsed > 0 ? (lastWeight - firstWeight) / weeksElapsed : 0;
-      
-      if (req.user.profile?.goalWeight && avgWeeklyChange !== 0) {
-        const weeksToGoal = Math.abs((req.user.profile.goalWeight - lastWeight) / avgWeeklyChange);
+      const msElapsed = new Date(weightLogs[weightLogs.length - 1].date) - new Date(weightLogs[0].date);
+      const weeksElapsed = msElapsed / (7 * 24 * 60 * 60 * 1000);
+
+      const goal = req.user.profile.goal || 'weight_loss';
+      const bounds = REALISTIC_BOUNDS[goal] || REALISTIC_BOUNDS['weight_loss'];
+
+      // Measured rate is only trusted when spread over at least 2 weeks with 3+ logs
+      const measuredRate = weeksElapsed >= 2 && weightLogs.length >= 3
+        ? (lastWeight - firstWeight) / weeksElapsed
+        : null;
+
+      // Clamp the measured rate to physiological bounds; fall back to recommended if unavailable
+      let effectiveRate;
+      let rateSource;
+      if (measuredRate !== null && measuredRate >= bounds.min && measuredRate <= bounds.max) {
+        effectiveRate = measuredRate;
+        rateSource = 'measured';
+      } else if (measuredRate !== null) {
+        // Measured rate exists but is outside realistic bounds — clamp it
+        effectiveRate = Math.max(bounds.min, Math.min(bounds.max, measuredRate));
+        rateSource = 'clamped';
+      } else {
+        // Not enough data — use the recommended rate for the goal
+        effectiveRate = bounds.recommended;
+        rateSource = 'estimated';
+      }
+
+      const remaining = req.user.profile.goalWeight - lastWeight;
+
+      // Only forecast if moving in the right direction
+      if (effectiveRate !== 0 && (remaining < 0 ? effectiveRate < 0 : effectiveRate > 0)) {
+        const weeksToGoal = Math.ceil(Math.abs(remaining / effectiveRate));
         const estimatedDate = new Date(Date.now() + weeksToGoal * 7 * 24 * 60 * 60 * 1000);
         forecast = {
-          weeksToGoal: Math.round(weeksToGoal),
+          weeksToGoal,
           estimatedDate,
-          avgWeeklyChange: Math.round(avgWeeklyChange * 100) / 100,
+          avgWeeklyChange: Math.round(effectiveRate * 100) / 100,
           currentWeight: lastWeight,
-          goalWeight: req.user.profile.goalWeight
+          goalWeight: req.user.profile.goalWeight,
+          rateSource
         };
       }
     }
@@ -106,6 +164,23 @@ router.get('/stats', protect, async (req, res) => {
       forecast,
       totalLogs: logs.length
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Weekly automated evaluation
+router.get('/evaluation', protect, async (req, res) => {
+  try {
+    const logs = await Progress.find({ user: req.user._id }).sort({ date: 1 });
+    if (logs.length === 0) {
+      return res.json({
+        evaluation: null,
+        message: 'Log at least a few progress entries to receive your first evaluation.'
+      });
+    }
+    const evaluation = runWeeklyEvaluation(logs, req.user.profile);
+    res.json({ evaluation });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

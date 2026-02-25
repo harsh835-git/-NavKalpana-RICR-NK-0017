@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   otp: String,
   otpExpiry: Date,
+  resetPasswordToken: String,
+  resetPasswordExpiry: Date,
   profile: {
     age: Number,
     sex: { type: String, enum: ['male', 'female'] },

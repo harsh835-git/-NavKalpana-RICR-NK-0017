@@ -47,7 +47,10 @@ const Login = () => {
                 onChange={e => setForm({...form, email: e.target.value})} required />
             </div>
             <div>
-              <label className="label">Password</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <label className="label" style={{ margin: 0 }}>Password</label>
+                <Link to="/forgot-password" style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 500 }}>Forgot password?</Link>
+              </div>
               <input className="input-field" type="password" placeholder="Your password" value={form.password}
                 onChange={e => setForm({...form, password: e.target.value})} required />
             </div>

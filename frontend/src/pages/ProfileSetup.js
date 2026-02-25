@@ -259,7 +259,28 @@ const ProfileSetup = () => {
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
+          {step === LAST_STEP && (
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+              background: 'rgba(255,179,64,0.06)',
+              border: '1px solid rgba(255,179,64,0.25)',
+              borderRadius: 10, padding: '11px 14px', marginTop: 20,
+              fontSize: 12, color: 'var(--text2)', lineHeight: 1.6
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffb340" strokeWidth="2.2"
+                strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span>
+                <strong style={{ color: 'var(--warning)', fontWeight: 600 }}>Medical Disclaimer: </strong>
+                Plans generated are for general informational purposes and not a substitute for professional medical advice.
+                Please consult a qualified healthcare provider before starting any exercise or diet program.
+              </span>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
             {step > 0 && (
               <button className="btn-secondary" onClick={() => setStep(s => s - 1)}>Back</button>
             )}

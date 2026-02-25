@@ -175,7 +175,27 @@ const Landing = () => {
           <div className="logo-mark" style={{ width: 28, height: 28, fontSize: 13 }}>F</div>
           <span className="gradient-text" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>FitAI</span>
         </div>
-        <p style={{ color: 'var(--text3)', fontSize: 12 }}>© 2024 FitAI. All rights reserved.</p>
+        <div style={{
+          maxWidth: 640, margin: '16px auto 0',
+          padding: '12px 20px',
+          background: 'rgba(255,179,64,0.05)',
+          border: '1px solid rgba(255,179,64,0.2)',
+          borderRadius: 10,
+          display: 'flex', alignItems: 'flex-start', gap: 10,
+          fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, textAlign: 'left'
+        }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffb340" strokeWidth="2.2"
+            strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>
+            <strong style={{ color: 'rgba(255,179,64,0.8)', fontWeight: 600 }}>Medical Disclaimer: </strong>
+            FitAI provides general fitness and nutrition information only. It is not a substitute for professional medical advice, diagnosis, or treatment.
+            Always consult a qualified healthcare provider before beginning any new workout or diet program, especially if you have pre-existing conditions or injuries.
+          </span>
+        </div>
+        <p style={{ color: 'var(--text3)', fontSize: 12, marginTop: 16 }}>© 2024 FitAI. All rights reserved.</p>
       </footer>
     </div>
   );

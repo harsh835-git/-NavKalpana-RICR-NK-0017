@@ -308,6 +308,29 @@ const Sidebar = ({ onCollapse, mobileOpen, onMobileToggle }) => {
   );
 };
 
+export const MedicalDisclaimer = ({ style }) => (
+  <div style={{
+    display: 'flex', alignItems: 'flex-start', gap: 10,
+    background: 'rgba(255,179,64,0.06)',
+    border: '1px solid rgba(255,179,64,0.25)',
+    borderRadius: 12, padding: '12px 16px',
+    fontSize: 12, color: 'var(--text2)', lineHeight: 1.6,
+    ...style
+  }}>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffb340" strokeWidth="2.2"
+      strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <span>
+      <strong style={{ color: 'var(--warning)', fontWeight: 600 }}>Medical Disclaimer: </strong>
+      This plan is for general informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment.
+      Consult your physician or a qualified health provider before starting any new exercise or diet program,
+      especially if you have any pre-existing medical conditions or injuries.
+    </span>
+  </div>
+);
+
 export const DashboardLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);

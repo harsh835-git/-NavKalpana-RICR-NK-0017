@@ -32,4 +32,27 @@ const sendOTP = async (email, otp, name) => {
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendOTP };
+const sendPasswordResetEmail = async (email, name, resetLink) => {
+  const mailOptions = {
+    from: `"FitAI" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'FitAI - Reset Your Password',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #fff; padding: 40px; border-radius: 16px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="background: linear-gradient(135deg, #00ff88, #00bfff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 32px; margin: 0;">FitAI</h1>
+        </div>
+        <h2 style="color: #fff; margin-bottom: 10px;">Hi ${name},</h2>
+        <p style="color: #aaa; margin-bottom: 30px;">We received a request to reset your password. Click the button below to set a new password:</p>
+        <div style="text-align: center; margin-bottom: 30px;">
+          <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #00ff88, #00bfff); color: #000; font-weight: bold; font-size: 16px; padding: 14px 32px; border-radius: 10px; text-decoration: none;">Reset Password</a>
+        </div>
+        <p style="color: #aaa; font-size: 14px;">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
+        <p style="color: #555; font-size: 12px; margin-top: 20px;">If the button doesn't work, copy and paste this link into your browser:<br/><a href="${resetLink}" style="color: #00ff88;">${resetLink}</a></p>
+      </div>
+    `
+  };
+  await transporter.sendMail(mailOptions);
+};
+
+module.exports = { sendOTP, sendPasswordResetEmail };

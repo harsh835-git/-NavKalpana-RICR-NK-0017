@@ -32,7 +32,13 @@ import {
   X,
   Home,
   Egg,
-  Utensils
+  Utensils,
+  Trophy,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Info,
+  Salad,
+  ChefHat
 } from 'lucide-react';
 
 const iconSize = 18;
@@ -80,4 +86,4 @@ export const StatusIcons = {
   deviated: <XCircle size={iconSizeSm} />
 };
 
-export { AlertTriangle, BarChart3, Bot, Lightbulb, Bed, Sun, Moon, LogOut, ChevronLeft, ChevronRight, Gauge, Check, Menu, Mail, X, Zap, Flame, Leaf, TrendingUp, Ruler, Target, Activity, Dumbbell, Scale, CircleDot, Home, Egg, Utensils };
+export { AlertTriangle, BarChart3, Bot, Lightbulb, Bed, Sun, Moon, LogOut, ChevronLeft, ChevronRight, Gauge, Check, Menu, Mail, X, Zap, Flame, Leaf, TrendingUp, Ruler, Target, Activity, Dumbbell, Scale, CircleDot, Home, Egg, Utensils, Trophy, ArrowDownCircle, ArrowUpCircle, Info, Salad, ChefHat };

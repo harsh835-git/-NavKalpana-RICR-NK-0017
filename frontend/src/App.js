@@ -6,6 +6,8 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyOTP from './pages/VerifyOTP';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ProfileSetup from './pages/ProfileSetup';
 import Dashboard from './pages/Dashboard';
 import WorkoutPlan from './pages/WorkoutPlan';
@@ -51,6 +53,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/profile-setup" element={<OnboardingRoute><ProfileSetup /></OnboardingRoute>} />
           <Route path="/dashboard" element={<ProfileRoute><Dashboard /></ProfileRoute>} />
           <Route path="/workout" element={<ProfileRoute><WorkoutPlan /></ProfileRoute>} />
